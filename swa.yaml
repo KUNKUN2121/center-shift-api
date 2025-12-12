@@ -1,0 +1,149 @@
+openapi: 3.0.3
+info:
+  title: Shift Submission API (Refined)
+  version: 1.0.1
+  description: Laravel Resource Controller準拠の設計
+
+paths:
+  ########################
+  # ユーザー：シフト提出リソース
+  ########################
+  /submissions:
+    get:
+      summary: 自分の提出シフト一覧取得
+      parameters:
+        - name: shift_period_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 一覧取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+    post:
+      summary: シフト提出（新規作成）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "201":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /submissions/{id}:
+    put:
+      summary: シフト提出（更新）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+    delete:
+      summary: シフト提出（削除）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: 削除成功（No Content）
+
+  ########################
+  # 管理者用エンドポイント
+  ########################
+  /admin/submissions:
+    get:
+      summary: 全ユーザーの提出一覧（管理者）
+      parameters:
+        - name: shift_period_id
+          in: query
+          schema:
+            type: integer
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 全データ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubmissionDetail"
+
+components:
+  schemas:
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+        shift_period_id:
+          type: integer # 修正: shift_periods_id -> shift_period_id
+        user_id:
+          type: integer
+        start_datetime:
+          type: string
+        end_datetime:
+          type: string
+        status:
+          type: string
+          enum: [draft, tentative, confirm]
+
+    # 管理者向け詳細
+    SubmissionDetail:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            user_name:
+              type: string
+              example: "山田 太郎"
+
+    SubmissionInput:
+      type: object
+      required:
+        - shift_period_id
+        - start_datetime
+        - end_datetime
+      properties:
+        shift_period_id:
+          type: integer # 修正: shift_periods_id -> shift_period_id
+        start_datetime:
+          type: string
+        end_datetime:
+          type: string
+        status:
+          type: string
+          enum: [draft, tentative]
