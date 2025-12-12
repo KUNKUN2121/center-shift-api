@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreSubmissionRequest;
 use App\Models\Submission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,14 @@ class SubmissionController extends Controller
             'shift_period_id' => 'required|integer',
         ]);
 
+        // periodがopenじゃない場合は弾く
+        $periodStatus = DB::table('shift_periods')
+            ->where('id', $request->shift_period_id)
+            ->value('status');
+        if ($periodStatus !== 'open') {
+            return response()->json(['message' => '指定されたシフト期間は提出できません。'], 403);
+        }
+
         // ログイン中のユーザーの、指定された期間のシフトを取得
         $submissions = Submission::query()
             ->where('user_id', Auth::id())
@@ -28,56 +37,58 @@ class SubmissionController extends Controller
             ->orderBy('start_datetime') // 日付順に並べる
             ->get();
 
+
+
         return response()->json($submissions);
     }
 
     /**
-     * シフト希望の一括保存（作成・更新・削除をまとめて行う）
-     * POST /api/submissions/batch
+     * 1件作成
+     * POST /api/submissions
      */
-    public function updateBatch(Request $request)
+    public function store(StoreSubmissionRequest $request)
     {
-        // 1. バリデーション
-        $validated = $request->validate([
-            'shift_period_id' => 'required|integer|exists:shift_periods,id',
-            'submissions'     => 'present|array', //全削除の場合 空配列で受け取る
-            'submissions.*.start_datetime' => 'required|date',
-            'submissions.*.end_datetime'   => 'required|date|after:submissions.*.start_datetime',
-            'submissions.*.notes'          => 'nullable|string',
+        // バリデーション済みのデータのみ取得
+        $validated = $request->validated();
+
+        $submission = Submission::create([
+            'user_id'         => Auth::id(),
+            'shift_period_id' => $validated['shift_period_id'],
+            'start_datetime'  => $validated['start_datetime'],
+            'end_datetime'    => $validated['end_datetime'],
+            'notes'           => $validated['notes'] ?? null,
+            'status'          => 'draft',
         ]);
 
-        $periodId = $validated['shift_period_id'];
-        $userId = Auth::id();
-        $newSubmissionsData = $validated['submissions'];
+        return response()->json($submission, 201);
+    }
 
-        // 2. トランザクション（失敗したらロールバック）
-        return DB::transaction(function () use ($userId, $periodId, $newSubmissionsData) {
+    /**
+     * 1件更新
+     * PUT /api/submissions/{id}
+     * ここも StoreSubmissionRequest を使います（IDチェックのロジックを入れたので流用可能）
+     */
+    public function update(StoreSubmissionRequest $request, string $id)
+    {
+        // 自分のデータか確認
+        $submission = Submission::where('user_id', Auth::id())->findOrFail($id);
 
-            // A. まず、この期間の既存データを全て削除する
-            Submission::where('user_id', $userId)
-                ->where('shift_period_id', $periodId)
-                ->delete();
+        $validated = $request->validated();
 
-            // B. 送られてきたデータを全て新規登録する
-            foreach ($newSubmissionsData as $data) {
-                Submission::create([
-                    'user_id'         => $userId,
-                    'shift_period_id' => $periodId,
-                    'start_datetime'  => $data['start_datetime'],
-                    'end_datetime'    => $data['end_datetime'],
-                    'notes'           => $data['notes'] ?? null,
-                    'status'          => 'draft', // 基本は下書きで保存
-                ]);
-            }
+        $submission->update($validated);
 
-            // 最新の状態を返却
-            return response()->json([
-                'message' => 'Saved successfully',
-                'data' => Submission::where('user_id', $userId)
-                            ->where('shift_period_id', $periodId)
-                            ->orderBy('start_datetime')
-                            ->get()
-            ]);
-        });
+        return response()->json($submission);
+    }
+
+    /**
+     * 1件削除
+     * DELETE /api/submissions/{id}
+     */
+    public function destroy(string $id)
+    {
+        $submission = Submission::where('user_id', Auth::id())->findOrFail($id);
+        $submission->delete();
+
+        return response()->json(null, 204); // No Content
     }
 }

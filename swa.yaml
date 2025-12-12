@@ -1,16 +1,43 @@
 openapi: 3.0.3
 info:
   title: Shift Submission API (Refined)
-  version: 1.0.1
-  description: Laravel Resource Controller準拠の設計
+  version: 1.1.0
+  description: Laravel Resource Controller準拠の設計。ユーザ名を含むShiftリソースを追加。
 
 paths:
+  ########################
+  # 確定シフト（全公開用）
+  ########################
+  /shifts:
+    get:
+      summary: 確定シフト一覧取得（カレンダー表示用）
+      description: |
+        指定された期間の全ユーザの確定シフトを取得します。
+        表示用に `user_name` が含まれています。
+      parameters:
+        - name: shift_period_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 取得したいシフト期間のID
+      responses:
+        "200":
+          description: シフト一覧取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Shift"
+
   ########################
   # ユーザー：シフト提出リソース
   ########################
   /submissions:
     get:
       summary: 自分の提出シフト一覧取得
+      description: ログインユーザー自身の提出データを取得します。
       parameters:
         - name: shift_period_id
           in: query
@@ -104,24 +131,56 @@ paths:
 
 components:
   schemas:
+    # --------------------------
+    # 確定シフト（表示用）
+    # --------------------------
+    Shift:
+      type: object
+      properties:
+        id:
+          type: integer
+        shift_period_id:
+          type: integer
+        user_id:
+          type: integer
+        user_name:         # ← ここに追加しました（Pattern A）
+          type: string
+          example: "田中 太郎"
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        # 色分けなどが必要ならここに追加
+        # color:
+        #   type: string
+
+    # --------------------------
+    # 提出データ（基本）
+    # --------------------------
     Submission:
       type: object
       properties:
         id:
           type: integer
         shift_period_id:
-          type: integer # 修正: shift_periods_id -> shift_period_id
+          type: integer
         user_id:
           type: integer
         start_datetime:
           type: string
+          format: date-time
         end_datetime:
           type: string
+          format: date-time
         status:
           type: string
           enum: [draft, tentative, confirm]
 
-    # 管理者向け詳細
+    # --------------------------
+    # 管理者向け詳細（Submission + α）
+    # --------------------------
     SubmissionDetail:
       allOf:
         - $ref: "#/components/schemas/Submission"
@@ -131,6 +190,9 @@ components:
               type: string
               example: "山田 太郎"
 
+    # --------------------------
+    # 入力用データ
+    # --------------------------
     SubmissionInput:
       type: object
       required:
@@ -139,11 +201,13 @@ components:
         - end_datetime
       properties:
         shift_period_id:
-          type: integer # 修正: shift_periods_id -> shift_period_id
+          type: integer
         start_datetime:
           type: string
+          format: date-time
         end_datetime:
           type: string
+          format: date-time
         status:
           type: string
           enum: [draft, tentative]
