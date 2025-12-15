@@ -13,16 +13,11 @@ class ShiftPeriod extends Model
         'name',
         'year',
         'month',
-        'deadline',
+        'start_date',
+        'end_date',
         'status',
     ];
 
-    // 日付として扱う設定（ISO8601形式 に自動変換）
-    protected $casts = [
-        'deadline' => 'datetime',
-    ];
-
-    // ▼ リレーション定義
 
     public function submissions()
     {

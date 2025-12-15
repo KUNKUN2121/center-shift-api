@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ShiftPeriodController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SubmissionController;
 use Illuminate\Http\Request;
@@ -25,4 +26,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // 確定シフト一覧取得
     Route::get('/shifts', [ShiftController::class, 'index']);
 
+});
+
+// 管理者用
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    // 期間一覧
+    Route::get('/periods', [ShiftPeriodController::class, 'index']);
+    // 新規期間作成
+    Route::post('/periods', [ShiftPeriodController::class, 'store']);
+    // ステータス変更
+    Route::patch('/periods/{id}/status', [ShiftPeriodController::class, 'updateStatus']);
 });
