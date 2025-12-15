@@ -16,8 +16,8 @@ return new class extends Migration
             $table->integer('year')->comment('年 (例: 2025)');
             $table->integer('month')->comment('月 (例: 10)');
 
-            $table->dateTime('start_date')->comment('募集開始');
-            $table->dateTime('end_date')->comment('募集終了');
+            $table->date('start_date')->comment('募集開始');
+            $table->date('end_date')->comment('募集終了');
 
             $table->string('status')->default('preparing')
                   ->comment('状態(preparing/open/closed/published)');

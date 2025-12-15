@@ -50,8 +50,8 @@ class DatabaseSeeder extends Seeder
         $period = ShiftPeriod::create([
             'year' => 2025,
             'month' => 10,
-            'start_date' => Carbon::create(2025, 10, 1, 0, 0, 0), // 募集開始
-            'end_date' => Carbon::create(2025, 10, 20, 23, 59, 59), // 募集終了
+            'start_date' => '2025-10-01',
+            'end_date' => '2025-10-20',
             'status' => 'open', // 募集中
         ]);
 

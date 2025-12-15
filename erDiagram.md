@@ -13,8 +13,8 @@ erDiagram
         bigint id PK
         int year "年"
         int month "月"
-        datetime start_date "募集開始"
-        datetime end_date "募集終了"
+        date start_date "募集開始"
+        date end_date "募集終了"
         string status "状態(preparing/open/closed/published)"
         datetime created_at
         datetime updated_at
