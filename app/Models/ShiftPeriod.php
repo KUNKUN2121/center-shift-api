@@ -16,6 +16,14 @@ class ShiftPeriod extends Model
         'start_date',
         'end_date',
         'status',
+        'announcement',
+        'closed_days',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'closed_days' => 'array',
     ];
 
 

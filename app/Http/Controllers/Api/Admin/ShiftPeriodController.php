@@ -113,4 +113,32 @@ class ShiftPeriodController extends Controller
 
         return response()->json($period);
     }
+
+    /**
+     * 詳細取得 (GET /api/admin/periods/{id})
+     */
+    public function show($id)
+    {
+        return ShiftPeriod::findOrFail($id);
+    }
+
+    /**
+     * 詳細更新 (PUT /api/admin/periods/{id})
+     */
+    public function update(Request $request, $id)
+    {
+        $period = ShiftPeriod::findOrFail($id);
+
+        $validated = $request->validate([
+            'start_date'   => 'required|date', // 募集開始日
+            'status'       => 'required|in:preparing,open,closed,published',
+            'announcement' => 'nullable|string',
+            'closed_days'  => 'nullable|array', // 休館日は配列で受け取る
+            'closed_days.*'=> 'date',           // 中身は日付
+        ]);
+
+        $period->update($validated);
+
+        return response()->json($period);
+    }
 }

@@ -36,8 +36,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     // 期間一覧
     Route::get('/periods', [ShiftPeriodController::class, 'index']);
+    // 詳細取得
+    Route::get('/periods/{id}', [ShiftPeriodController::class, 'show']);
+
+
+
     // 新規期間作成
     Route::post('/periods', [ShiftPeriodController::class, 'store']);
     // ステータス変更
     Route::patch('/periods/{id}/status', [ShiftPeriodController::class, 'updateStatus']);
+    // 期間情報更新
+    Route::put('/periods/{id}', [ShiftPeriodController::class, 'update']);
 });

@@ -16,6 +16,8 @@ erDiagram
         date start_date "募集開始"
         date end_date "募集終了"
         string status "状態(preparing/open/closed/published)"
+        string? announcement
+        array? closed_days
         datetime created_at
         datetime updated_at
     }
