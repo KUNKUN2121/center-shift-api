@@ -9,8 +9,21 @@ use Illuminate\Http\Request;
 
 class ShiftPeriodController extends Controller
 {
+    // 募集期間一覧を取得(user用, openのもの)
+    public function periodOpen()
+    {
+        // openのものを新しい順に取得
+        $periods = ShiftPeriod::where('status', 'open')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->first();
+
+        return response()->json($periods);
+    }
+
     /**
-     * 募集期間一覧を取得
+     * 募集期間一覧を取得(admin用 すべての期間)
      */
     public function index()
     {

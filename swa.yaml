@@ -6,6 +6,24 @@ info:
 
 paths:
   ########################
+  # シフト募集期間（新規追加）
+  ########################
+  /period:
+    get:
+      summary: 募集中シフト期間の取得
+      description: |
+        現在募集中（statusが `open`）のシフト期間情報を取得します。
+        該当データが存在しない場合は空（null）または204 No Contentを想定。
+        （データは0個または1個のみ）
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShiftPeriod"
+
+  ########################
   # 確定シフト（全公開用）
   ########################
   /shifts:
@@ -132,6 +150,34 @@ paths:
 components:
   schemas:
     # --------------------------
+    # シフト募集期間（新規追加）
+    # --------------------------
+    ShiftPeriod:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+        year:
+          type: integer
+          example: 2024
+        month:
+          type: integer
+          example: 12
+        start_date:
+          type: string
+          format: date
+          example: "2024-12-01"
+        end_date:
+          type: string
+          format: date
+          example: "2024-12-15"
+        status:
+          type: string
+          enum: [open]
+          example: "open"
+
+    # --------------------------
     # 確定シフト（表示用）
     # --------------------------
     Shift:
@@ -143,7 +189,7 @@ components:
           type: integer
         user_id:
           type: integer
-        user_name:         # ← ここに追加しました（Pattern A）
+        user_name:
           type: string
           example: "田中 太郎"
         start_datetime:
@@ -152,9 +198,6 @@ components:
         end_datetime:
           type: string
           format: date-time
-        # 色分けなどが必要ならここに追加
-        # color:
-        #   type: string
 
     # --------------------------
     # 提出データ（基本）

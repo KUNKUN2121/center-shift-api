@@ -15,6 +15,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // 一覧取得
     Route::get('/submissions', [SubmissionController::class, 'index']);
 
+    //periods
+    // user用 募集中の期間一覧取得
+    Route::get('/periods/open', [ShiftPeriodController::class, 'periodOpen']);
+
     // submission
     // 1件作成
     Route::post('/submissions', [SubmissionController::class, 'store']);
