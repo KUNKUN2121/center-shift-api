@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ShiftEditorController;
 use App\Http\Controllers\Api\Admin\ShiftPeriodController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SubmissionController;
@@ -30,6 +31,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // 確定シフト一覧取得
     Route::get('/shifts', [ShiftController::class, 'index']);
 
+    Route::get('/users', function () {
+    return App\Models\User::orderBy('id')->get(['id', 'name']); // 必要なカラムだけ
+});
 });
 
 // 管理者用
@@ -47,4 +51,7 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::patch('/periods/{id}/status', [ShiftPeriodController::class, 'updateStatus']);
     // 期間情報更新
     Route::put('/periods/{id}', [ShiftPeriodController::class, 'update']);
+
+    // エディター画面用一括データ取得
+    Route::get('/periods/{id}/editor', [ShiftEditorController::class, 'show']);
 });
