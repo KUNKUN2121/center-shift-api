@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\ShiftEditorController;
 use App\Http\Controllers\Api\Admin\ShiftPeriodController;
+use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SubmissionController;
 use Illuminate\Http\Request;
@@ -57,4 +58,11 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
 
     // 特定の期間に紐づくシフトの一括保存
     Route::post('/periods/{id}/shifts/bulk', [ShiftPeriodController::class, 'updateBulkShifts']);
+
+
+    // ユーザー管理
+    Route::get('/users', [UserController::class, 'index']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::patch('/users/{id}/password', [UserController::class, 'resetPassword']);
+    Route::post('/users', [UserController::class, 'store']);
 });
