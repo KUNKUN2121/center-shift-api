@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Shift;
 use App\Models\ShiftPeriod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ShiftPeriodController extends Controller
 {
@@ -140,5 +142,61 @@ class ShiftPeriodController extends Controller
         $period->update($validated);
 
         return response()->json($period);
+    }
+
+
+/**
+ * シフトの一括更新・作成・削除
+ */
+    public function updateBulkShifts(Request $request, $id)
+    {
+        $period = ShiftPeriod::findOrFail($id);
+
+        // バリデーション
+        $request->validate([
+            'shifts' => 'array',
+            'shifts.*.user_id' => 'required|exists:users,id',
+            'shifts.*.start_datetime' => 'required|date',
+            'shifts.*.end_datetime' => 'required|date|after:shifts.*.start_datetime',
+        ]);
+
+        // $start = Carbon::parse($data['start_datetime'])->toDateTimeString();
+        // $end   = Carbon::parse($data['end_datetime'])->toDateTimeString();
+
+        $incomingShifts = $request->input('shifts', []);
+
+        DB::transaction(function () use ($period, $incomingShifts) {
+            // 1. 送られてきたデータの中に存在するIDを抽出（数値のものだけ）
+            $incomingIds = collect($incomingShifts)
+                ->pluck('id')
+                ->filter(fn($val) => is_numeric($val))
+                ->toArray();
+
+            // 2. 送られてきたリストにない既存のシフトを削除
+            // (フロントエンドで消されたデータをDBからも消す)
+            $period->shifts()->whereNotIn('id', $incomingIds)->delete();
+
+            // 3. 各シフトデータの登録 or 更新
+            foreach ($incomingShifts as $data) {
+                $start = Carbon::parse($data['start_datetime'])->toDateTimeString();
+                $end   = Carbon::parse($data['end_datetime'])->toDateTimeString();
+                // フロントエンドから送られたIDが数値なら更新、それ以外（Math.random等）なら新規作成
+                if (isset($data['id']) && is_numeric($data['id'])) {
+                    Shift::where('id', $data['id'])->update([
+                        'start_datetime' => $start,
+                        'end_datetime'   => $end,
+                        // user_id は通常変わらない想定ですが、必要なら更新に含めます
+                    ]);
+                } else {
+                    $period->shifts()->create([
+                        'user_id'        => $data['user_id'],
+                        'start_datetime' => $data['start_datetime'],
+                        'end_datetime'   => $data['end_datetime'],
+                    ]);
+                }
+            }
+        });
+
+        return response()->json(['message' => 'シフトを保存しました。']);
     }
 }

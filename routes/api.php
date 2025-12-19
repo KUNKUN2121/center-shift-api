@@ -54,4 +54,7 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
 
     // エディター画面用一括データ取得
     Route::get('/periods/{id}/editor', [ShiftEditorController::class, 'show']);
+
+    // 特定の期間に紐づくシフトの一括保存
+    Route::post('/periods/{id}/shifts/bulk', [ShiftPeriodController::class, 'updateBulkShifts']);
 });
