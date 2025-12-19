@@ -20,8 +20,23 @@ class ShiftEditorController extends Controller
         // 1. 期間情報の取得
         $period = ShiftPeriod::findOrFail($periodId);
 
-        // 2. ユーザー一覧 (全スタッフ)
-        $users = User::orderBy('id')->get();
+        // 2. ユーザー一覧
+        // シフトが提出されている人 || 確定シフトがある人 || is_activeがtrueの人だけに絞る場合
+        $users = User::where(function ($query) use ($periodId) {
+            $query->whereHas('submissions', function ($q) use ($periodId) {
+                $q->where('shift_period_id', $periodId);
+            })->orWhereHas('shifts', function ($q) use ($periodId) {
+                $q->where('shift_period_id', $periodId);
+            });
+        })->orWhere('is_active', true)
+          ->get()
+          ->map(function ($user) {
+              return [
+                  'id'        => $user->id,
+                  'name'      => $user->name,
+                  'email'     => $user->email,
+              ];
+          });
 
         // 3. 確定シフト一覧 (shifts)
         $shifts = Shift::with('user')
